@@ -148,3 +148,9 @@ dmypy.json
 # папки со статикой и медиа
 media/
 
+# папка с тестами
+tests/
+
+# папка с postman_collection
+postman_collection/
+
