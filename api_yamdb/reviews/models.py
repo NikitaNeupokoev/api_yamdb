@@ -8,7 +8,7 @@ MAX_LENGHT = 150
 
 #TO DO необходимо будет переписать через AbstractBaseUser
 class CustomUser(AbstractUser):
-    """Пользовательсчкая моедль User"""
+    """Пользовательская моедль User"""
     pass
 
 
