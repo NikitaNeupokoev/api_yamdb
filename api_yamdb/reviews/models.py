@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Avg
+from rest_framework import serializers
 
 
 User = get_user_model()
@@ -72,6 +73,7 @@ class Title(models.Model):
         related_name='titles',
         verbose_name='жанр'
     )
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         verbose_name = 'произведение'
@@ -79,17 +81,6 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
-
-    def update_rating(self):
-        """
-        Пересчитывает рейтинг произведения на основе отзывов.
-        """
-        avg_score = self.reviews.aggregate(Avg('score'))['score__avg']
-        if avg_score is not None:
-            self.rating = avg_score
-        else:
-            self.rating = 0.0
-        self.save()
 
 
 class Review(models.Model):
@@ -123,6 +114,10 @@ class Review(models.Model):
     class Meta:
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
+        constraints = [models.UniqueConstraint(
+            fields=['title', 'author'],
+            name='unique_review'
+        )]
         ordering = ['-pub_date']  # Отзывы сортируются от новых к старым
 
     def __str__(self):
