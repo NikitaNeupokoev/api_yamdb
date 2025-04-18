@@ -1,17 +1,15 @@
-from rest_framework import viewsets
-from rest_framework.permissions import (IsAuthenticatedOrReadOnly,
-                                        IsAuthenticated, AllowAny)
 from django.shortcuts import get_object_or_404
-from rest_framework import filters
+from rest_framework import viewsets
+from rest_framework.exceptions import ValidationError
 
 from .serializers import (CategorySerializer, GenreSerializer,
                           TitleSerializer, ReviewSerializer, CommentSerializer)
-# from .permissions import IsAdminOrReadOnly
+
 from reviews.models import Category, Genre, Title, Review, Comment, User
 from .viewsets import ListCreateDestroyViewSet
 
 
-class CategorySerializer(ListCreateDestroyViewSet):
+class CategoryViewSet(ListCreateDestroyViewSet):
     """
     list: Получить список всех категорий Права доступа: Доступно без токена
 
@@ -22,10 +20,11 @@ class CategorySerializer(ListCreateDestroyViewSet):
     """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    lookup_field = 'slug'
     # permission_classes = (IsAdminOrReadOnly,)
 
 
-class GenreSerializer(ListCreateDestroyViewSet):
+class GenreViewSet(ListCreateDestroyViewSet):
     """
     list: Получить список всех жанров. Права доступа: Доступно без токена
 
@@ -36,6 +35,7 @@ class GenreSerializer(ListCreateDestroyViewSet):
     """
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    lookup_field = 'slug'
     # permission_classes = (IsAdminOrReadOnly,)
 
 
@@ -57,6 +57,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     """
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
+    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
     # permission_classes = (IsAdminOrReadOnly,)
 
 
@@ -78,8 +79,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """
     serializer_class = ReviewSerializer
     # permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('author__username',)
+    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
 
     def get_title(self):
         """
@@ -92,7 +92,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user, title=self.get_title())
+        title = self.get_title()
+        if (
+            self.request.method == 'POST'
+            and title.reviews.filter(author=self.request.user).exists()
+        ):
+            raise ValidationError(
+                {'review': 'Вы уже писали отзыв для данного произведения'}
+            )
+        serializer.save(author=self.request.user, title=title)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -114,6 +122,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     """
     serializer_class = CommentSerializer
     # permission_classes = (IsAdminOrReadOnly,)
+    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
 
 
     def get_review(self):
@@ -121,7 +130,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         Метод возвращает отзыв по его id или ошибку 404 (Not Found)
         в случае его отсутствия
         """
-        return get_object_or_404(Title, pk=self.kwargs.get('review_id'))
+        return get_object_or_404(Review, pk=self.kwargs.get('review_id'))
 
     def get_queryset(self):
         return self.get_review().comments.all()

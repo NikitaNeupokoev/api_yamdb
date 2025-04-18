@@ -2,9 +2,17 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db.models import Avg
+from django.utils import timezone
+from django.core.exceptions import ValidationError
+
 
 MAX_LENGHT = 150
+
+
+def validate_year(values):
+    """Валидации значения year"""
+    if values > timezone.now().year:
+        raise ValidationError('год выпуска не может быть больше текущего')
 
 
 #TO DO необходимо будет переписать через AbstractBaseUser
@@ -67,7 +75,8 @@ class Title(models.Model):
         max_length=MAX_LENGHT
     )
     year = models.PositiveSmallIntegerField(
-        verbose_name='Год создания'
+        verbose_name='Год создания',
+        validators=(validate_year,)
     )
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL,
