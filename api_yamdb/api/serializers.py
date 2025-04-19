@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
+from django.db.models import Avg
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator
 
@@ -12,6 +13,7 @@ User = get_user_model()
 class CategorySerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Category.
+
     Предоставляет информацию о категории, включая:
         - name: Название категории.
         - slug: Идентификатор категории.
@@ -24,6 +26,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class GenreSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Genre.
+
     Предоставляет информацию о жанре, включая:
         - name: Название жанра.
         - slug: Идентификатор жанра.
@@ -36,21 +39,19 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Title.
+
     Предоставляет информацию о произведении, включая:
         - id: ID произведения.
         - name: Название произведения.
         - year: Год создания.
         - rating: Рейтинг произведения (только для чтения).
         - genre: Список жанров (только для SlugRelatedField).
-        - category: Категория произведения.
-        (только для SlugRelatedField).
+        - category: Категория произведения (только для SlugRelatedField).
 
     Notes:
-        1)  Поле `rating` вычисляется динамически.
-        и доступно только для чтения.
-        2)  Поля `genre` и `category` используют.
-        `SlugRelatedField` для отображения и выбора
-        .жанров и категорий по их названиям (slug).
+        1)  Поле `rating` вычисляется динамически и доступно только для чтения.
+        2)  Поля `genre` и `category` используют `SlugRelatedField` для
+            отображения и выбора жанров и категорий по их названиям (slug).
     """
     rating = serializers.SerializerMethodField()
     genre = SlugRelatedField(
@@ -68,21 +69,11 @@ class TitleSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'year', 'rating', 'genre', 'category',)
         model = Title
 
-    def update_rating(self):
-        """
-        Пересчитывает рейтинг произведения на основе отзывов.
-        """
-        avg_score = self.reviews.aggregate(Avg('score'))['score__avg']
-        if avg_score is not None:
-            self.rating = avg_score
-        else:
-            self.rating = 0.0
-        self.save()
-
 
 class ReviewSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Review.
+
     Предоставляет информацию об отзыве, включая:
         - id: ID отзыва.
         - title: Произведение, к которому относится
@@ -93,12 +84,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         - pub_date: Дата публикации отзыва.
 
     Notes:
-        1)  Поле `author` использует `SlugRelatedField`.
-        для отображения автора по username и является полем.
-        только для чтения.
-        2)  Поле `title` является полем только для чтения.
-        3)  Уникальность отзывов обеспечивается валидатором.
-        `UniqueTogetherValidator` для полей `title` и `author`.
+        1) Поле 'author' отображается как username автора (только для чтения).
     """
     author = SlugRelatedField(
         slug_field='username',
@@ -108,20 +94,14 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ('id', 'title', 'text', 'author', 'score', 'pub_date',)
-        read_only_fields = ('title',)
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Review.objects.all(),
-                fields=('title', 'author'),
-                message='Вы уже писали отзыв для данного произведения'
-            )
-        ]
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        read_only_fields = ('id', 'pub_date')
 
 
 class CommentSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Comment.
+
     Предоставляет информацию о комментарии, включая:
         - id: ID комментария.
         - review: Отзыв, к которому относится комментарий.

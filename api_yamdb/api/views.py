@@ -1,4 +1,4 @@
-from rest_framework import permissions, viewsets
+from rest_framework import exceptions, permissions, viewsets
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -74,6 +74,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
             title=self.get_title()
         )
 
+    def get_title(self):  # Добавим этот метод
+        return get_object_or_404(Title, pk=self.kwargs['title_id'])
+
 
 class CommentViewSet(viewsets.ModelViewSet):
     """
@@ -96,4 +99,7 @@ class CommentViewSet(viewsets.ModelViewSet):
             Review,
             id=self.kwargs.get('review_id')
         )
-        serializer.save(author=self.request.user, review=review)
+        serializer.save(
+            author=self.request.user,
+            review=review
+        )
