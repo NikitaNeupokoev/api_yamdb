@@ -1,9 +1,8 @@
-from rest_framework import serializers
-from django.shortcuts import get_object_or_404
-from rest_framework.relations import SlugRelatedField
-from rest_framework.exceptions import ValidationError
 from django.db.models import Avg
 from django.utils import timezone
+from rest_framework import serializers
+from rest_framework.relations import SlugRelatedField
+from rest_framework.exceptions import ValidationError
 
 from reviews.models import Category, Genre, Title, Review, Comment, User
 
@@ -41,7 +40,6 @@ class TitleSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_rating(obj):
         """Подсчет среднего значения рейтинга"""
-        #Не проверял пока просто скопировал переписал из model
         avg_score = obj.reviews.aggregate(Avg('score'))['score__avg']
         if avg_score is not None:
             return avg_score
@@ -70,26 +68,6 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only_fields = ('title',)
         model = Review
 
-    # Не знаю как лучше проверять здесь или в perform_create во views.py
-    # тут как бы лишний запрос к базе
-    # def validate(self, data):
-    #     title = get_object_or_404(
-    #         Title,
-    #         pk=self.context.get('view').kwargs['title_id']
-    #     )
-    #     author = self.context.get('request').user
-    #     if (
-    #         self.context.get('request').method == 'POST'
-    #         and title.reviews.filter(author=author).exists()
-    #     ):
-    #         raise ValidationError(
-    #             {'review': 'Вы уже писали отзыв для данного произведения'}
-    #         )
-    #     return data
-
-
-
-
 
 class CommentSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(
@@ -102,7 +80,6 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ('id', 'review', 'text', 'author', 'pub_date',)
         read_only_fields = ('review',)
         model = Comment
-
 
 #TO DO Описать после создания кастомной модели юзера
 # class UserSerializer(serializers.ModelSerializer):

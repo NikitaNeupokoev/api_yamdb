@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
+from rest_framework import viewsets, filters
 from rest_framework.exceptions import ValidationError
 
 from .serializers import (CategorySerializer, GenreSerializer,
@@ -21,6 +21,8 @@ class CategoryViewSet(ListCreateDestroyViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     lookup_field = 'slug'
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
     # permission_classes = (IsAdminOrReadOnly,)
 
 
@@ -36,6 +38,8 @@ class GenreViewSet(ListCreateDestroyViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     lookup_field = 'slug'
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
     # permission_classes = (IsAdminOrReadOnly,)
 
 
@@ -93,14 +97,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         title = self.get_title()
+        author = self.request.user
         if (
             self.request.method == 'POST'
-            and title.reviews.filter(author=self.request.user).exists()
+            and title.reviews.filter(author=author).exists()
         ):
             raise ValidationError(
                 {'review': 'Вы уже писали отзыв для данного произведения'}
             )
-        serializer.save(author=self.request.user, title=title)
+        serializer.save(author=author, title=title)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
