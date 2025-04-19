@@ -74,9 +74,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
             title=self.get_title()
         )
 
-    def get_title(self):  # Добавим этот метод
-        return get_object_or_404(Title, pk=self.kwargs['title_id'])
-
 
 class CommentViewSet(viewsets.ModelViewSet):
     """
