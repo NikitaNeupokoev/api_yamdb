@@ -69,10 +69,18 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
-        serializer.save(
-            author=self.request.user,
-            title=self.get_title()
-        )
+        if self.request.method == 'POST':
+            title = self.get_title()
+            author = self.request.user
+
+            if title.reviews.filter(author=author).exists():
+                raise exceptions.ValidationError(
+                    {'review': 'Вы уже писали отзыв для данного произведения'}
+                )
+
+            serializer.save(author=author, title=title)
+        else:
+            serializer.save()
 
 
 class CommentViewSet(viewsets.ModelViewSet):
