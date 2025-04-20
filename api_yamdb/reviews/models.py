@@ -15,11 +15,31 @@ def validate_year(values):
         raise ValidationError('год выпуска не может быть больше текущего')
 
 
-#TO DO необходимо будет переписать через AbstractBaseUser
 class CustomUser(AbstractUser):
-    """Пользовательская моедль User"""
-    pass
+    USER = 'user'
+    MODERATOR = 'moderator'
+    ADMIN = 'admin'
 
+    ROLE_CHOICES = [
+        (USER, 'User'),
+        (MODERATOR, 'Moderator'),
+        (ADMIN, 'Administrator'),
+    ]
+
+    email = models.EmailField(unique=True)
+    bio = models.TextField(blank=True)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=USER)
+
+    @property
+    def is_admin(self):
+        return self.role == self.ADMIN or self.is_superuser
+
+    @property
+    def is_moderator(self):
+        return self.role == self.MODERATOR
+
+    class Meta:
+        ordering = ['username']
 
 User = get_user_model()
 
@@ -94,9 +114,6 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
-
-    #перенесенов сериализатор TitleSerializer. В базе это значение не хранится
-    # def update_rating(self):
 
 
 class Review(models.Model):
