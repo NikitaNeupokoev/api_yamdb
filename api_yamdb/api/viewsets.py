@@ -9,3 +9,4 @@ class ListCreateDestroyViewSet(mixins.ListModelMixin,
     Базовый ViewSet для операций "list", "create" и "destroy".
     """
     pass
+

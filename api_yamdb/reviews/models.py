@@ -1,20 +1,55 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import Avg
-from rest_framework import serializers
+from django.utils import timezone
 
-
-User = get_user_model()
-
-# Константа максимальное кол-во символов
 MAX_LENGHT = 150
 
 
+def validate_year(values):
+    """Валидации значения year"""
+    if values > timezone.now().year:
+        raise ValidationError('год выпуска не может быть больше текущего')
+
+
+class CustomUser(AbstractUser):
+    """Кастомная модель пользователя."""
+
+    USER = 'user'
+    MODERATOR = 'moderator'
+    ADMIN = 'admin'
+
+    ROLE_CHOICES = [
+        (USER, 'User'),
+        (MODERATOR, 'Moderator'),
+        (ADMIN, 'Administrator'),
+    ]
+
+    email = models.EmailField(unique=True)
+    bio = models.TextField(blank=True)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=USER)
+
+    @property
+    def is_admin(self):
+        """Проверка на роль администратора."""
+        return self.role == self.ADMIN or self.is_superuser
+
+    @property
+    def is_moderator(self):
+        """Проверка на роль модератора."""
+        return self.role == self.MODERATOR
+
+    class Meta:
+        ordering = ['username']
+
+User = get_user_model()
+
+
 class Category(models.Model):
-    """
-    Модель категории произведения.
-    """
+    """Модель категории произведения."""
+
     name = models.CharField(
         verbose_name='Название категории',
         max_length=MAX_LENGHT
@@ -33,9 +68,8 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
-    """
-    Модель жанра произведения.
-    """
+    """Модель жанра произведения."""
+
     name = models.CharField(
         verbose_name='Название жанра',
         max_length=MAX_LENGHT
@@ -54,15 +88,15 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
-    """
-    Модель произведения.
-    """
+    """Модель произведения."""
+
     name = models.CharField(
         verbose_name='Название произведения',
         max_length=MAX_LENGHT
     )
     year = models.PositiveSmallIntegerField(
-        verbose_name='Год создания'
+        verbose_name='Год создания',
+        validators=(validate_year,)
     )
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL,
@@ -73,7 +107,6 @@ class Title(models.Model):
         related_name='titles',
         verbose_name='жанр'
     )
-    rating = serializers.SerializerMethodField()
 
     class Meta:
         verbose_name = 'произведение'
@@ -84,9 +117,8 @@ class Title(models.Model):
 
 
 class Review(models.Model):
-    """
-    Модель Отзыва.
-    """
+    """Модель Отзыва."""
+
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -101,7 +133,7 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Автор'
-    )  # TODO:  После настройки User, заменить на ForeignKey
+    )
     score = models.PositiveSmallIntegerField(
         verbose_name='Оценка',
         validators=(MinValueValidator(1), MaxValueValidator(10))
@@ -114,10 +146,12 @@ class Review(models.Model):
     class Meta:
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
-        constraints = [models.UniqueConstraint(
-            fields=['title', 'author'],
-            name='unique_review'
-        )]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'author'],
+                name='unique_review_for_title'
+            )
+        ]
         ordering = ['-pub_date']  # Отзывы сортируются от новых к старым
 
     def __str__(self):
@@ -125,9 +159,8 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
-    """
-    Модель Комментария.
-    """
+    """Модель Комментария."""
+
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
@@ -142,7 +175,7 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
         related_name='comments',
         verbose_name='Автор'
-    )  # TODO:  После настройки User, заменить на ForeignKey
+    )
     pub_date = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Дата публикации'
