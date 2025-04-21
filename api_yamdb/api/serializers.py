@@ -4,29 +4,48 @@ from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from rest_framework.exceptions import ValidationError
 
-from reviews.models import Category, Genre, Title, Review, Comment, User
+from reviews.models import (
+    Category,
+    Genre,
+    Title,
+    Review,
+    Comment
+)
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    """Сериализатор для категорий."""
+
     class Meta:
         fields = ('name', 'slug',)
         model = Category
 
 
 class GenreSerializer(serializers.ModelSerializer):
+    """Сериализатор для жанров."""
+
     class Meta:
         fields = ('name', 'slug',)
         model = Genre
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
+    """Сериализатор для чтения произведений."""
+
     rating = serializers.SerializerMethodField()
     genre = GenreSerializer(read_only=True, many=True)
     category = CategorySerializer(read_only=True)
 
     class Meta:
         fields = (
-            'id', 'name', 'description', 'year', 'rating', 'genre', 'category',)
+            'id',
+            'name',
+            'description',
+            'year',
+            'rating',
+            'genre',
+            'category',
+        )
         model = Title
 
     @staticmethod
@@ -40,16 +59,27 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    """Сериализатор для создания/изменения произведений."""
+
     category = serializers.SlugRelatedField(
-        slug_field='slug', queryset=Category.objects.all()
+        slug_field='slug',
+        queryset=Category.objects.all()
     )
     genre = serializers.SlugRelatedField(
-        slug_field='slug', queryset=Genre.objects.all(), many=True
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        many=True
     )
 
     class Meta:
         fields = (
-            'id', 'name', 'description', 'year', 'genre', 'category',)
+            'id',
+            'name',
+            'description',
+            'year',
+            'genre',
+            'category',
+        )
         model = Title
 
     @staticmethod
@@ -62,8 +92,9 @@ class TitleSerializer(serializers.ModelSerializer):
         return values
 
 
-
 class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор для отзывов."""
+
     author = SlugRelatedField(
         slug_field='username',
         read_only=True,
@@ -71,12 +102,21 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('id', 'title', 'text', 'author', 'score', 'pub_date',)
+        fields = (
+            'id',
+            'title',
+            'text',
+            'author',
+            'score',
+            'pub_date',
+        )
         read_only_fields = ('title',)
         model = Review
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор для комментариев."""
+
     author = SlugRelatedField(
         slug_field='username',
         read_only=True,
@@ -84,6 +124,12 @@ class CommentSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('id', 'review', 'text', 'author', 'pub_date',)
+        fields = (
+            'id',
+            'review',
+            'text',
+            'author',
+            'pub_date',
+        )
         read_only_fields = ('review',)
         model = Comment

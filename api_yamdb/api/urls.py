@@ -31,4 +31,3 @@ urlpatterns = [
     path('v1/', include(router_v1.urls)),
     path('api-token-auth/', views.obtain_auth_token),
 ]
-

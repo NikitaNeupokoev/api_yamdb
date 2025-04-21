@@ -1,21 +1,24 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
-from django.db import models
-from django.core.validators import MaxValueValidator, MinValueValidator
-from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
+from django.utils import timezone
 
-
-MAX_LENGHT = 254
+MAX_LENGHT = 150
 
 
 def validate_year(values):
     """Валидации значения year"""
     if values > timezone.now().year:
-        raise ValidationError('год выпуска не может быть больше текущего')
+        raise ValidationError(
+            'год выпуска не может быть больше текущего'
+        )
 
 
 class CustomUser(AbstractUser):
+    """Кастомная модель пользователя."""
+
     USER = 'user'
     MODERATOR = 'moderator'
     ADMIN = 'admin'
@@ -26,16 +29,22 @@ class CustomUser(AbstractUser):
         (ADMIN, 'Administrator'),
     ]
 
-    email = models.EmailField(unique=True, max_length=MAX_LENGHT)
+    email = models.EmailField(unique=True)
     bio = models.TextField(blank=True)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=USER)
+    role = models.CharField(
+        max_length=20,
+        choices=ROLE_CHOICES,
+        default=USER
+    )
 
     @property
     def is_admin(self):
+        """Является ли пользователь администратором."""
         return self.role == self.ADMIN or self.is_superuser
 
     @property
     def is_moderator(self):
+        """Является ли пользователь модератором."""
         return self.role == self.MODERATOR
 
     class Meta:
@@ -47,13 +56,13 @@ class CustomUser(AbstractUser):
             )
         ]
 
+
 User = get_user_model()
 
 
 class Category(models.Model):
-    """
-    Модель категории произведения.
-    """
+    """Модель категории произведения."""
+
     name = models.CharField(
         verbose_name='Название категории',
         max_length=MAX_LENGHT
@@ -72,9 +81,8 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
-    """
-    Модель жанра произведения.
-    """
+    """Модель жанра произведения."""
+
     name = models.CharField(
         verbose_name='Название жанра',
         max_length=MAX_LENGHT
@@ -93,9 +101,8 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
-    """
-    Модель произведения.
-    """
+    """Модель произведения."""
+
     name = models.CharField(
         verbose_name='Название произведения',
         max_length=MAX_LENGHT
@@ -127,9 +134,8 @@ class Title(models.Model):
 
 
 class Review(models.Model):
-    """
-    Модель Отзыва.
-    """
+    """Модель Отзыва."""
+
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -147,7 +153,10 @@ class Review(models.Model):
     )
     score = models.PositiveSmallIntegerField(
         verbose_name='Оценка',
-        validators=(MinValueValidator(1), MaxValueValidator(10))
+        validators=(
+            MinValueValidator(1),
+            MaxValueValidator(10)
+        )
     )
     pub_date = models.DateTimeField(
         auto_now_add=True,
@@ -163,16 +172,15 @@ class Review(models.Model):
                 name='unique_review_for_title'
             )
         ]
-        ordering = ['-pub_date']  # Отзывы сортируются от новых к старым
+        ordering = ['-pub_date']
 
     def __str__(self):
         return self.text[:100]
 
 
 class Comment(models.Model):
-    """
-    Модель Комментария.
-    """
+    """Модель Комментария."""
+
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
