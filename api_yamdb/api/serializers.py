@@ -1,77 +1,91 @@
-from django.db.models import Avg
-from django.utils import timezone
-from rest_framework import serializers
-from rest_framework.relations import SlugRelatedField
-from rest_framework.exceptions import ValidationError
+from django.contrib.auth import get_user_model
 
-from reviews.models import (
-    Category,
-    Genre,
-    Title,
-    Review,
-    Comment,
-    User
-)
+from rest_framework import serializers
+from django.db.models import Avg
+from rest_framework.relations import SlugRelatedField
+from rest_framework.validators import UniqueTogetherValidator
+
+from reviews.models import Category, Comment, Genre, Review, Title
+
+User = get_user_model()
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    """Сериализатор для категорий."""
+    """
+    Сериализатор для модели Category.
 
+    Предоставляет информацию о категории, включая:
+        - name: Название категории.
+        - slug: Идентификатор категории.
+    """
     class Meta:
         fields = ('name', 'slug',)
         model = Category
 
 
 class GenreSerializer(serializers.ModelSerializer):
-    """Сериализатор для жанров."""
+    """
+    Сериализатор для модели Genre.
 
+    Предоставляет информацию о жанре, включая:
+        - name: Название жанра.
+        - slug: Идентификатор жанра.
+    """
     class Meta:
         fields = ('name', 'slug',)
         model = Genre
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    """Сериализатор для произведений."""
+    """
+    Сериализатор для модели Title.
 
+    Предоставляет информацию о произведении, включая:
+        - id: ID произведения.
+        - name: Название произведения.
+        - year: Год создания.
+        - rating: Рейтинг произведения (только для чтения).
+        - genre: Список жанров (только для SlugRelatedField).
+        - category: Категория произведения (только для SlugRelatedField).
+
+    Notes:
+        1)  Поле `rating` вычисляется динамически и доступно только для чтения.
+        2)  Поля `genre` и `category` используют `SlugRelatedField` для
+            отображения и выбора жанров и категорий по их названиям (slug).
+    """
     rating = serializers.SerializerMethodField()
     genre = SlugRelatedField(
-        slug_field='slug',
+        slug_field='name',
         queryset=Genre.objects.all(),
         many=True
     )
     category = SlugRelatedField(
-        slug_field='slug',
+        slug_field='name',
         queryset=Category.objects.all(),
 
     )
 
     class Meta:
-        fields = (
-            'id', 'name', 'year', 'rating', 'genre', 'category',)
+        fields = ('id', 'name', 'year', 'rating', 'genre', 'category',)
         model = Title
-
-    @staticmethod
-    def get_rating(obj):
-        """Подсчет среднего значения рейтинга"""
-        avg_score = obj.reviews.aggregate(Avg('score'))['score__avg']
-        if avg_score is not None:
-            return avg_score
-        else:
-            return 0.0
-
-    @staticmethod
-    def validate_year(values):
-        """Метод для валидации значения year"""
-        if values > timezone.now().year:
-            raise ValidationError(
-                {'year': 'год выпуска не может быть больше текущего'}
-            )
-        return values
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    """Сериализатор для комментариев."""
+    """
+    Сериализатор для модели Review.
 
+    Предоставляет информацию об отзыве, включая:
+        - id: ID отзыва.
+        - title: Произведение, к которому относится
+        .отзыв (только для чтения).
+        - text: Текст отзыва.
+        - author: Автор отзыва (username, только для чтения).
+        - score: Оценка произведения.
+        - pub_date: Дата публикации отзыва.
+
+    Notes:
+        1) Поле 'author' отображается как username автора (только для чтения).
+    """
     author = SlugRelatedField(
         slug_field='username',
         read_only=True,
@@ -79,14 +93,30 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('id', 'title', 'text', 'author', 'score', 'pub_date',)
-        read_only_fields = ('title',)
         model = Review
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        read_only_fields = ('id', 'pub_date')
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    """Сериализатор для комментариев."""
+    """
+    Сериализатор для модели Comment.
 
+    Предоставляет информацию о комментарии, включая:
+        - id: ID комментария.
+        - review: Отзыв, к которому относится комментарий.
+        (только для чтения).
+        - text: Текст комментария.
+        - author: Автор комментария.
+        (username, только для чтения).
+        - pub_date: Дата публикации комментария.
+
+    Notes:
+        1)  Поле `author` использует `SlugRelatedField`.
+        для отображения автора по username.
+        и является полем только для чтения.
+        2)  Поле `review` является полем только для чтения.
+    """
     author = SlugRelatedField(
         slug_field='username',
         read_only=True,
@@ -94,15 +124,6 @@ class CommentSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
+        model = Comment
         fields = ('id', 'review', 'text', 'author', 'pub_date',)
         read_only_fields = ('review',)
-        model = Comment
-
-#TO DO Описать после создания кастомной модели юзера
-# class UserSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         fields = (
-#             'username', 'email', 'first_name',
-#             'last_name', 'bio', 'role'
-#         )
-#         model = User
