@@ -1,13 +1,22 @@
 from rest_framework import serializers
-
+from django.core.validators import RegexValidator
 from reviews.models import CustomUser
 
 
 class SignupSerializer(serializers.Serializer):
     """Сериализатор для регистрации нового пользователя."""
 
-    email = serializers.EmailField()
-    username = serializers.CharField(max_length=150)
+    email = serializers.EmailField(max_length=254)
+    username = serializers.CharField(
+        max_length=150,
+        validators = [
+            RegexValidator(
+                regex = '^[\w.@+-]+\Z',
+                message = 'Никнейм может сожержать только символы @/./+/-/_',
+                code='invalid_username'
+            )
+        ]
+                                     )
 
     def validate(self, data):
         """Проверяет, что имя пользователя не 'me'."""

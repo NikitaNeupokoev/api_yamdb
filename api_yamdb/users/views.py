@@ -31,10 +31,24 @@ from .permissions import IsAdmin
 def signup(request):
     serializer = SignupSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    user, _ = CustomUser.objects.get_or_create(
-        username=serializer.validated_data['username'],
-        email=serializer.validated_data['email']
-    )
+    username = serializer.validated_data['username']
+    email = serializer.validated_data['email']
+    user_by_username = CustomUser.objects.filter(username=username).first()
+    user_by_email = CustomUser.objects.filter(email=email).first()
+    if user_by_username:
+        if user_by_username.email != email:
+            return Response(
+                {"error": "Пользователь с таким username уже существует"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        user = user_by_username
+    else:
+        if user_by_email:
+            return Response(
+                {"error": "Пользователь с таким email уже существует"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        user = CustomUser.objects.create(username=username, email=email)
     confirmation_code = default_token_generator.make_token(user)
     send_mail(
         'Код подтверждения YaMDB',
