@@ -11,6 +11,7 @@ from .serializers import (CategorySerializer, GenreSerializer, TitleSerializer,
 from reviews.models import Category, Genre, Title, Review, Comment, User
 from .viewsets import ListCreateDestroyViewSet
 from .permissions import IsAdminOrReadOnly, IsAuthorOrStaff
+from .filters import TitleFilter
 
 
 class CategoryViewSet(ListCreateDestroyViewSet):
@@ -68,7 +69,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('genre__slug',)
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
         if self.action in ('retrieve', 'list') :
@@ -94,14 +95,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """
     serializer_class = ReviewSerializer
     http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
-
-    def get_permissions(self):
-        if self.action == 'create':
-             return (IsAuthenticated(),)
-        elif self.action in ('partial_update', 'destroy'):
-            return (IsAuthenticated(), IsAuthorOrStaff(),)
-        else:
-            return (AllowAny(),)
+    permission_classes = (IsAuthorOrStaff,)
 
 
     def get_title(self):
@@ -146,14 +140,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     """
     serializer_class = CommentSerializer
     http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
-
-    def get_permissions(self):
-        if self.action == 'create':
-             return (IsAuthenticated(),)
-        elif self.action in ('partial_update', 'destroy'):
-            return (IsAuthenticated(), IsAuthorOrStaff(),)
-        else:
-            return (AllowAny(),)
+    permission_classes = (IsAuthorOrStaff,)
 
     def get_review(self):
         """

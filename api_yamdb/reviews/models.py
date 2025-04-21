@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 
 
-MAX_LENGHT = 150
+MAX_LENGHT = 254
 
 
 def validate_year(values):
@@ -26,7 +26,7 @@ class CustomUser(AbstractUser):
         (ADMIN, 'Administrator'),
     ]
 
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, max_length=MAX_LENGHT)
     bio = models.TextField(blank=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=USER)
 
