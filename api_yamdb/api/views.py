@@ -1,12 +1,16 @@
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, filters
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from .serializers import (CategorySerializer, GenreSerializer,
-                          TitleSerializer, ReviewSerializer, CommentSerializer)
+from .serializers import (CategorySerializer, GenreSerializer, TitleSerializer,
+                          TitleReadSerializer,ReviewSerializer,
+                          CommentSerializer)
 
 from reviews.models import Category, Genre, Title, Review, Comment, User
 from .viewsets import ListCreateDestroyViewSet
+from .permissions import IsAdminOrReadOnly, IsAuthorOrStaff
 
 
 class CategoryViewSet(ListCreateDestroyViewSet):
@@ -23,7 +27,7 @@ class CategoryViewSet(ListCreateDestroyViewSet):
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    # permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
 
 
 class GenreViewSet(ListCreateDestroyViewSet):
@@ -40,7 +44,7 @@ class GenreViewSet(ListCreateDestroyViewSet):
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    # permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -62,7 +66,14 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
-    # permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('genre__slug',)
+
+    def get_serializer_class(self):
+        if self.action in ('retrieve', 'list') :
+            return TitleReadSerializer
+        return TitleSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -82,8 +93,16 @@ class ReviewViewSet(viewsets.ModelViewSet):
     Права доступа: Автор отзыва, модератор или администратор.
     """
     serializer_class = ReviewSerializer
-    # permission_classes = (IsAdminOrReadOnly,)
     http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
+
+    def get_permissions(self):
+        if self.action == 'create':
+             return (IsAuthenticated(),)
+        elif self.action in ('partial_update', 'destroy'):
+            return (IsAuthenticated(), IsAuthorOrStaff(),)
+        else:
+            return (AllowAny(),)
+
 
     def get_title(self):
         """
@@ -126,9 +145,15 @@ class CommentViewSet(viewsets.ModelViewSet):
     Права доступа: Автор комментария, модератор или администратор.
     """
     serializer_class = CommentSerializer
-    # permission_classes = (IsAdminOrReadOnly,)
     http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
 
+    def get_permissions(self):
+        if self.action == 'create':
+             return (IsAuthenticated(),)
+        elif self.action in ('partial_update', 'destroy'):
+            return (IsAuthenticated(), IsAuthorOrStaff(),)
+        else:
+            return (AllowAny(),)
 
     def get_review(self):
         """

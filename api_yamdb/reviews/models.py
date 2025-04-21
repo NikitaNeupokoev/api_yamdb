@@ -40,6 +40,12 @@ class CustomUser(AbstractUser):
 
     class Meta:
         ordering = ['username']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['username', 'email'],
+                name='unique_user'
+            )
+        ]
 
 User = get_user_model()
 
@@ -93,6 +99,10 @@ class Title(models.Model):
     name = models.CharField(
         verbose_name='Название произведения',
         max_length=MAX_LENGHT
+    )
+    description = models.TextField(
+        verbose_name='Описание',
+        blank=True
     )
     year = models.PositiveSmallIntegerField(
         verbose_name='Год создания',

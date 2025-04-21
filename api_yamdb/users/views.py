@@ -6,6 +6,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework import filters
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import CustomUser
@@ -47,6 +48,9 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsAdmin]
+    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
     lookup_field = 'username'
 
     @action(detail=False, methods=['get', 'patch'], permission_classes=[IsAuthenticated])

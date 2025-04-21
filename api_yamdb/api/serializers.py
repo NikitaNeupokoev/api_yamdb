@@ -19,22 +19,14 @@ class GenreSerializer(serializers.ModelSerializer):
         model = Genre
 
 
-class TitleSerializer(serializers.ModelSerializer):
+class TitleReadSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField()
-    genre = SlugRelatedField(
-        slug_field='slug',
-        queryset=Genre.objects.all(),
-        many=True
-    )
-    category = SlugRelatedField(
-        slug_field='slug',
-        queryset=Category.objects.all(),
-
-    )
+    genre = GenreSerializer(read_only=True, many=True)
+    category = CategorySerializer(read_only=True)
 
     class Meta:
         fields = (
-            'id', 'name', 'year', 'rating', 'genre', 'category',)
+            'id', 'name', 'description', 'year', 'rating', 'genre', 'category',)
         model = Title
 
     @staticmethod
@@ -44,7 +36,21 @@ class TitleSerializer(serializers.ModelSerializer):
         if avg_score is not None:
             return avg_score
         else:
-            return 0.0
+            return None
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Category.objects.all()
+    )
+    genre = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Genre.objects.all(), many=True
+    )
+
+    class Meta:
+        fields = (
+            'id', 'name', 'description', 'year', 'genre', 'category',)
+        model = Title
 
     @staticmethod
     def validate_year(values):
@@ -54,6 +60,7 @@ class TitleSerializer(serializers.ModelSerializer):
                 {'year': 'год выпуска не может быть больше текущего'}
             )
         return values
+
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -80,12 +87,3 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ('id', 'review', 'text', 'author', 'pub_date',)
         read_only_fields = ('review',)
         model = Comment
-
-#TO DO Описать после создания кастомной модели юзера
-# class UserSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         fields = (
-#             'username', 'email', 'first_name',
-#             'last_name', 'bio', 'role'
-#         )
-#         model = User
