@@ -31,7 +31,7 @@ class CategoryViewSet(ListCreateDestroyViewSet):
         - destroy: Администратор.
     """
 
-    queryset = Category.objects.all()
+    queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
@@ -52,7 +52,7 @@ class GenreViewSet(ListCreateDestroyViewSet):
         - destroy: Администратор.
     """
 
-    queryset = Genre.objects.all()
+    queryset = Genre.objects.all().order_by('name')
     serializer_class = GenreSerializer
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
@@ -73,7 +73,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         - create:
     """
 
-    queryset = Title.objects.all()
+    queryset = Title.objects.all().order_by('name')
     serializer_class = TitleSerializer
     http_method_names = (
         ['get', 'post', 'patch', 'delete', 'head', 'options']
