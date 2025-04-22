@@ -151,3 +151,9 @@ media/
 # скрипт
 api_yamdb/reviews/management/
 
+# Коллекции
+postman_collection/
+
+# тесты
+tests/
+
