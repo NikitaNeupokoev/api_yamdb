@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -14,47 +13,6 @@ def validate_year(values):
         raise ValidationError(
             'год выпуска не может быть больше текущего'
         )
-
-
-class CustomUser(AbstractUser):
-    """Кастомная модель пользователя."""
-
-    USER = 'user'
-    MODERATOR = 'moderator'
-    ADMIN = 'admin'
-
-    ROLE_CHOICES = [
-        (USER, 'User'),
-        (MODERATOR, 'Moderator'),
-        (ADMIN, 'Administrator'),
-    ]
-
-    email = models.EmailField(unique=True)
-    bio = models.TextField(blank=True)
-    role = models.CharField(
-        max_length=20,
-        choices=ROLE_CHOICES,
-        default=USER
-    )
-
-    @property
-    def is_admin(self):
-        """Является ли пользователь администратором."""
-        return self.role == self.ADMIN or self.is_superuser
-
-    @property
-    def is_moderator(self):
-        """Является ли пользователь модератором."""
-        return self.role == self.MODERATOR
-
-    class Meta:
-        ordering = ['username']
-        constraints = [
-            models.UniqueConstraint(
-                fields=['username', 'email'],
-                name='unique_user'
-            )
-        ]
 
 
 User = get_user_model()

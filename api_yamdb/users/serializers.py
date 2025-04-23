@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.core.validators import RegexValidator
-from reviews.models import CustomUser
+from .models import User
 
 
 class SignupSerializer(serializers.Serializer):
@@ -38,7 +38,7 @@ class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для пользователей (для администраторов)."""
 
     class Meta:
-        model = CustomUser
+        model = User
         fields = (
             'username',
             'email',
@@ -53,7 +53,7 @@ class MeSerializer(serializers.ModelSerializer):
     """Сериализатор для текущего пользователя."""
 
     class Meta:
-        model = CustomUser
+        model = User
         fields = (
             'username',
             'email',

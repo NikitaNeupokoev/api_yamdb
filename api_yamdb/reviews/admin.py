@@ -1,10 +1,8 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
 
 from .models import (
     Category,
     Comment,
-    CustomUser,
     Genre,
     Review,
     Title
@@ -54,7 +52,6 @@ class CommentAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
 
-admin.site.register(CustomUser, UserAdmin)
 admin.site.register(Review, ReviewAdmin)
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Genre, GenreAdmin)

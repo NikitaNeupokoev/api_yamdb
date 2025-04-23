@@ -9,7 +9,7 @@ from .views import (
     CommentViewSet
 )
 
-app_name = 'api'
+app_name = 'api_v1'
 
 router_v1 = SimpleRouter()
 router_v1.register('categories', CategoryViewSet, basename='category')
