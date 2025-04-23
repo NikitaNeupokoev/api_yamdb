@@ -26,7 +26,6 @@ from .serializers import (
 from .permissions import IsAdmin
 
 
-
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def signup(request):
