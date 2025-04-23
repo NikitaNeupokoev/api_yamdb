@@ -1,12 +1,15 @@
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, viewsets
 from rest_framework.exceptions import ValidationError
 
 from reviews.models import Category, Genre, Review, Title
 
-from .filters import TitleFilter
-from .permissions import IsAdminOrReadOnly, IsAuthorOrStaff
+from api.filters import TitleFilter
+from api.permissions import IsAdminOrReadOnly, IsAuthorOrStaff
 from .serializers import (
     CategorySerializer,
     CommentSerializer,
