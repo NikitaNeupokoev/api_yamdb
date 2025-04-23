@@ -151,3 +151,5 @@ media/
 # скрипт
 api_yamdb/reviews/management/
 
+# шаблон
+.env.template
