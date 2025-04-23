@@ -1,15 +1,23 @@
 from pathlib import Path
+from sys import exit
+from os import getenv
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
+if not getenv('SECRET_KEY'):
+    exit("Не указан параметр SECRET_KEY.")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'p&l%385148kslhtyn^##a1)ilz@4zqj=rq&agdol^##zgl9(vs'
+SECRET_KEY = getenv('SECRET_KEY')
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
-AUTH_USER_MODEL = 'reviews.CustomUser'
+AUTH_USER_MODEL = 'users.User'
 
 INSTALLED_APPS = [
     'django.contrib.admin',

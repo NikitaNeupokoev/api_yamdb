@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework import filters
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import CustomUser
+from .models import User
 
 from .serializers import (
     SignupSerializer,
@@ -26,6 +26,7 @@ from .serializers import (
 from .permissions import IsAdmin
 
 
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def signup(request):
@@ -33,8 +34,8 @@ def signup(request):
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data['username']
     email = serializer.validated_data['email']
-    user_by_username = CustomUser.objects.filter(username=username).first()
-    user_by_email = CustomUser.objects.filter(email=email).first()
+    user_by_username = User.objects.filter(username=username).first()
+    user_by_email = User.objects.filter(email=email).first()
     if user_by_username:
         if user_by_username.email != email:
             return Response(
@@ -48,7 +49,7 @@ def signup(request):
                 {"error": "Пользователь с таким email уже существует"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        user = CustomUser.objects.create(username=username, email=email)
+        user = User.objects.create(username=username, email=email)
     confirmation_code = default_token_generator.make_token(user)
     send_mail(
         'Код подтверждения YaMDB',
@@ -69,7 +70,7 @@ def get_token(request):
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     user = get_object_or_404(
-        CustomUser,
+        User,
         username=serializer.validated_data['username']
     )
     if default_token_generator.check_token(
@@ -93,7 +94,7 @@ class UserViewSet(viewsets.ModelViewSet):
     (только для администраторов).
     """
 
-    queryset = CustomUser.objects.all()
+    queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsAdmin]
     http_method_names = (

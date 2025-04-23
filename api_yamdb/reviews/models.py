@@ -1,61 +1,14 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.utils import timezone
 
-MAX_LENGHT = 150
-
-
-def validate_year(values):
-    """Валидации значения year"""
-    if values > timezone.now().year:
-        raise ValidationError(
-            'год выпуска не может быть больше текущего'
-        )
-
-
-class CustomUser(AbstractUser):
-    """Кастомная модель пользователя."""
-
-    USER = 'user'
-    MODERATOR = 'moderator'
-    ADMIN = 'admin'
-
-    ROLE_CHOICES = [
-        (USER, 'User'),
-        (MODERATOR, 'Moderator'),
-        (ADMIN, 'Administrator'),
-    ]
-
-    email = models.EmailField(unique=True)
-    bio = models.TextField(blank=True)
-    role = models.CharField(
-        max_length=20,
-        choices=ROLE_CHOICES,
-        default=USER
-    )
-
-    @property
-    def is_admin(self):
-        """Является ли пользователь администратором."""
-        return self.role == self.ADMIN or self.is_superuser
-
-    @property
-    def is_moderator(self):
-        """Является ли пользователь модератором."""
-        return self.role == self.MODERATOR
-
-    class Meta:
-        ordering = ['username']
-        constraints = [
-            models.UniqueConstraint(
-                fields=['username', 'email'],
-                name='unique_user'
-            )
-        ]
-
+from api_yamdb.constants import (
+    CHAR_FIELD_MAX_LENGHT,
+    MIN_VALUE_SCORE,
+    MAX_VALUE_SCORE,
+    MAX_TEXT_LIGHT
+)
+from .validators import validate_year
 
 User = get_user_model()
 
@@ -65,7 +18,7 @@ class Category(models.Model):
 
     name = models.CharField(
         verbose_name='Название категории',
-        max_length=MAX_LENGHT
+        max_length=CHAR_FIELD_MAX_LENGHT
     )
     slug = models.SlugField(
         unique=True,
@@ -86,7 +39,7 @@ class Genre(models.Model):
 
     name = models.CharField(
         verbose_name='Название жанра',
-        max_length=MAX_LENGHT
+        max_length=CHAR_FIELD_MAX_LENGHT
     )
     slug = models.SlugField(
         unique=True,
@@ -106,7 +59,7 @@ class Title(models.Model):
 
     name = models.CharField(
         verbose_name='Название произведения',
-        max_length=MAX_LENGHT
+        max_length=CHAR_FIELD_MAX_LENGHT
     )
     description = models.TextField(
         verbose_name='Описание',
@@ -155,9 +108,13 @@ class Review(models.Model):
     score = models.PositiveSmallIntegerField(
         verbose_name='Оценка',
         validators=(
-            MinValueValidator(1),
-            MaxValueValidator(10)
-        )
+            MinValueValidator(MIN_VALUE_SCORE),
+            MaxValueValidator(MAX_VALUE_SCORE),
+        ),
+        error_messages={
+            'max_value': f'Оценка не должна превышать {MAX_VALUE_SCORE}.',
+            'min_value': f'Оценка не должна быть меньше {MIN_VALUE_SCORE}.'
+        }
     )
     pub_date = models.DateTimeField(
         auto_now_add=True,
@@ -208,4 +165,4 @@ class Comment(models.Model):
         ordering = ['-pub_date']
 
     def __str__(self):
-        return self.text[:50]
+        return self.text[:MAX_TEXT_LIGHT]
