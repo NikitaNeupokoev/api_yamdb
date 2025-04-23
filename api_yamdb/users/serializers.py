@@ -9,14 +9,14 @@ class SignupSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=254)
     username = serializers.CharField(
         max_length=150,
-        validators = [
+        validators=[
             RegexValidator(
-                regex = '^[\w.@+-]+\Z',
-                message = 'Никнейм может сожержать только символы @/./+/-/_',
+                regex=r"^[a-zA-Z0-9_.@+-]+\Z",
+                message='Никнейм может содержать только символы @/./+/-/_',
                 code='invalid_username'
             )
         ]
-                                     )
+    )
 
     def validate(self, data):
         """Проверяет, что имя пользователя не 'me'."""
