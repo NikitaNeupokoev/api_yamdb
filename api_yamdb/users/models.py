@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from api_yamdb.constants import MAX_LENGTH_ROLE
+
 
 class User(AbstractUser):
     """Кастомная модель пользователя."""
@@ -18,7 +20,7 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     bio = models.TextField(blank=True)
     role = models.CharField(
-        max_length=20,
+        max_length=MAX_LENGTH_ROLE,
         choices=ROLE_CHOICES,
         default=USER
     )
