@@ -157,3 +157,5 @@ postman_collection/
 # тесты
 tests/
 
+# шаблон
+.env.template
