@@ -2,12 +2,12 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, viewsets
 from rest_framework.exceptions import ValidationError
+from django_filters.rest_framework import DjangoFilterBackend
 
 from api.v1.filters import TitleFilter
 from api.v1.permissions import IsAdminOrReadOnly, IsAuthorOrStaff
 from reviews.models import Category, Genre, Review, Title
 
-from .mixins import PatchModelMixin
 from .serializers import (
     CategorySerializer,
     CommentSerializer,
@@ -16,7 +16,7 @@ from .serializers import (
     TitleReadSerializer,
     TitleCreateUpdateSerializer,
 )
-from .viewsets import ListCreateDestroyViewSet
+from .viewsets import ListCreateDestroyViewSet, ViewSetWithoutUpdate
 
 
 class CategoryViewSet(ListCreateDestroyViewSet):
@@ -61,12 +61,7 @@ class GenreViewSet(ListCreateDestroyViewSet):
     permission_classes = (IsAdminOrReadOnly,)
 
 
-class TitleViewSet(mixins.CreateModelMixin,
-                     mixins.RetrieveModelMixin,
-                     mixins.ListModelMixin,
-                     mixins.DestroyModelMixin,
-                     PatchModelMixin,
-                     viewsets.GenericViewSet):
+class TitleViewSet(ViewSetWithoutUpdate):
     """
     ViewSet для модели Title.
 
@@ -87,12 +82,6 @@ class TitleViewSet(mixins.CreateModelMixin,
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
 
-    def get_queryset(self):
-        """
-        Аннотирует queryset рейтингом для операций retrieve и list.
-        """
-        return self.queryset
-
     def get_serializer_class(self):
         """
         Возвращает класс сериализатора в зависимости от действия.
@@ -105,7 +94,7 @@ class TitleViewSet(mixins.CreateModelMixin,
         return TitleCreateUpdateSerializer
 
 
-class ReviewViewSet(viewsets.ModelViewSet):
+class ReviewViewSet(ViewSetWithoutUpdate):
     """
     ViewSet для модели Review.
 
@@ -122,9 +111,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = ReviewSerializer
-    http_method_names = (
-        ['get', 'post', 'patch', 'delete', 'head', 'options']
-    )
     permission_classes = (IsAuthorOrStaff,)
 
     def get_title(self):
@@ -139,23 +125,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
-        """
-        Создает новый отзыв, проверяя наличие существующего.
-        отзыва от пользователя.
-        """
-        title = self.get_title()
-        author = self.request.user
-        if (
-            self.request.method == 'POST'
-            and title.reviews.filter(author=author).exists()
-        ):
-            raise ValidationError(
-                {'review': 'Вы уже писали отзыв для данного произведения'}
-            )
-        serializer.save(author=author, title=title)
+        """Создает новый отзыв."""
+        serializer.save(author=self.request.user, title=self.get_title())
 
 
-class CommentViewSet(viewsets.ModelViewSet):
+class CommentViewSet(ViewSetWithoutUpdate):
     """
     ViewSet для модели Comment.
 
@@ -171,23 +145,14 @@ class CommentViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = CommentSerializer
-    http_method_names = (
-        ['get', 'post', 'patch', 'delete', 'head', 'options']
-    )
     permission_classes = (IsAuthorOrStaff,)
-
-    def get_title(self):
-        """Возвращает произведение по его ID или вызывает 404."""
-        return get_object_or_404(
-            Title,
-            pk=self.kwargs.get('title_id')
-        )
 
     def get_review(self):
         """Возвращает отзыв по его ID или вызывает 404."""
         return get_object_or_404(
             Review,
-            pk=self.kwargs.get('review_id')
+            pk=self.kwargs.get('review_id'),
+            title=self.kwargs.get('title_id')
         )
 
     def get_queryset(self):

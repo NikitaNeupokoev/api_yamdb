@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -10,6 +11,7 @@ from reviews.models import (
     Review,
     Comment
 )
+from api_yamdb.constants import MIN_YEAR
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -75,11 +77,18 @@ class TitleCreateUpdateSerializer(serializers.ModelSerializer):
     @staticmethod
     def validate_year(values):
         """Метод для валидации значения year"""
-        if values > timezone.now().year:
-            raise ValidationError(
-                {'year': 'год выпуска не может быть больше текущего'}
-            )
-        return values
+        current_year = timezone.now().year
+        if MIN_YEAR > values:
+            error_message = f'год выпуска не может быть меньше {MIN_YEAR}.'
+
+        elif values > current_year:
+            error_message = ('год выпуска не может '
+                             f'быть больше {current_year}.')
+
+        else:
+            return values
+
+        raise ValidationError({'year': error_message})
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -102,6 +111,24 @@ class ReviewSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('title',)
         model = Review
+
+    def validate(self, data):
+        """
+        Проверка наличия существующего отзыва от пользователя.
+        """
+        title = get_object_or_404(
+            Title,
+            pk=self.context.get('view').kwargs['title_id']
+        )
+        author = self.context.get('request').user
+        if (
+            self.context.get('request').method == 'POST'
+            and title.reviews.filter(author=author).exists()
+        ):
+            raise ValidationError(
+                {'review': 'Вы уже писали отзыв для данного произведения'}
+            )
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):

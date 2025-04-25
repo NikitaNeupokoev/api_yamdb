@@ -1,15 +1,6 @@
 from rest_framework import permissions
 
-
-class IsAdmin(permissions.BasePermission):
-    """Разрешение: только администратор."""
-
-    def has_permission(self, request, view):
-        """Проверка прав доступа для запроса."""
-        return (
-                request.user.is_authenticated
-                and request.user.is_admin
-        )
+from users.permissions import IsAdmin
 
 
 class IsAdminOrReadOnly(IsAdmin):

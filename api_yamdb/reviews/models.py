@@ -70,8 +70,10 @@ class Title(models.Model):
         validators=(validate_year,)
     )
     category = models.ForeignKey(
-        Category, on_delete=models.SET_NULL,
-        related_name='titles', null=True
+        Category,
+        on_delete=models.SET_NULL,
+        related_name='titles',
+        null=True
     )
     genre = models.ManyToManyField(
         Genre,
@@ -133,7 +135,7 @@ class Review(models.Model):
         ordering = ['-pub_date']
 
     def __str__(self):
-        return self.text[:100]
+        return self.text[:MAX_TEXT_LIGHT]
 
 
 class Comment(models.Model):
