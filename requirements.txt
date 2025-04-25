@@ -24,7 +24,7 @@ pyparsing==3.0.7
 pytest==6.2.4
 pytest-django==4.4.0
 pytest-pythonpath==0.7.3
-python-dotenv==1.1.0
+python-dotenv
 pytz==2021.3
 requests==2.26.0
 sqlparse==0.4.2

@@ -1,8 +1,7 @@
-from django.db.models import Avg
 from django.utils import timezone
 from rest_framework import serializers
-from rest_framework.relations import SlugRelatedField
 from rest_framework.exceptions import ValidationError
+from rest_framework.relations import SlugRelatedField
 
 from reviews.models import (
     Category,
@@ -32,7 +31,7 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleReadSerializer(serializers.ModelSerializer):
     """Сериализатор для чтения произведений."""
 
-    rating = serializers.SerializerMethodField()
+    rating = serializers.FloatField(read_only=True)
     genre = GenreSerializer(read_only=True, many=True)
     category = CategorySerializer(read_only=True)
 
@@ -48,17 +47,8 @@ class TitleReadSerializer(serializers.ModelSerializer):
         )
         model = Title
 
-    @staticmethod
-    def get_rating(obj):
-        """Подсчет среднего значения рейтинга"""
-        avg_score = obj.reviews.aggregate(Avg('score'))['score__avg']
-        if avg_score is not None:
-            return avg_score
-        else:
-            return None
 
-
-class TitleSerializer(serializers.ModelSerializer):
+class TitleCreateUpdateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания/изменения произведений."""
 
     category = serializers.SlugRelatedField(

@@ -1,12 +1,19 @@
-from rest_framework import serializers
 from django.core.validators import RegexValidator
+from rest_framework import serializers
+
 from .models import User
+from api_yamdb.constants import (
+    EMAIL_MAX_LENGTH,
+    USERNAME_MAX_LENGTH
+)
 
 
 class SignupSerializer(serializers.Serializer):
     """Сериализатор для регистрации нового пользователя."""
 
-    email = serializers.EmailField(max_length=254)
+    email = serializers.EmailField(
+        max_length=EMAIL_MAX_LENGTH
+    )
     username = serializers.CharField(
         max_length=150,
         validators=[
@@ -30,7 +37,9 @@ class SignupSerializer(serializers.Serializer):
 class TokenSerializer(serializers.Serializer):
     """Сериализатор для получения JWT-токена."""
 
-    username = serializers.CharField(max_length=150)
+    username = serializers.CharField(
+        max_length=USERNAME_MAX_LENGTH
+    )
     confirmation_code = serializers.CharField()
 
 

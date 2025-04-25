@@ -1,22 +1,20 @@
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets
-from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets
+from rest_framework import filters, mixins, viewsets
 from rest_framework.exceptions import ValidationError
 
+from api.v1.filters import TitleFilter
+from api.v1.permissions import IsAdminOrReadOnly, IsAuthorOrStaff
 from reviews.models import Category, Genre, Review, Title
 
-from api.filters import TitleFilter
-from api.permissions import IsAdminOrReadOnly, IsAuthorOrStaff
+from .mixins import PatchModelMixin
 from .serializers import (
     CategorySerializer,
     CommentSerializer,
     GenreSerializer,
     ReviewSerializer,
     TitleReadSerializer,
-    TitleSerializer,
+    TitleCreateUpdateSerializer,
 )
 from .viewsets import ListCreateDestroyViewSet
 
@@ -63,7 +61,12 @@ class GenreViewSet(ListCreateDestroyViewSet):
     permission_classes = (IsAdminOrReadOnly,)
 
 
-class TitleViewSet(viewsets.ModelViewSet):
+class TitleViewSet(mixins.CreateModelMixin,
+                     mixins.RetrieveModelMixin,
+                     mixins.ListModelMixin,
+                     mixins.DestroyModelMixin,
+                     PatchModelMixin,
+                     viewsets.GenericViewSet):
     """
     ViewSet для модели Title.
 
@@ -76,25 +79,30 @@ class TitleViewSet(viewsets.ModelViewSet):
         - create:
     """
 
-    queryset = Title.objects.all().order_by('name')
-    serializer_class = TitleSerializer
-    http_method_names = (
-        ['get', 'post', 'patch', 'delete', 'head', 'options']
-    )
+    queryset = Title.objects.all().annotate(
+        rating=Avg('reviews__score')
+    ).order_by('name')
+    serializer_class = TitleCreateUpdateSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
+
+    def get_queryset(self):
+        """
+        Аннотирует queryset рейтингом для операций retrieve и list.
+        """
+        return self.queryset
 
     def get_serializer_class(self):
         """
         Возвращает класс сериализатора в зависимости от действия.
 
         Для операций retrieve и list используется TitleReadSerializer,
-        для остальных - TitleSerializer.
+        для остальных - TitleCreateUpdateSerializer.
         """
         if self.action in ('retrieve', 'list'):
             return TitleReadSerializer
-        return TitleSerializer
+        return TitleCreateUpdateSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -167,6 +175,13 @@ class CommentViewSet(viewsets.ModelViewSet):
         ['get', 'post', 'patch', 'delete', 'head', 'options']
     )
     permission_classes = (IsAuthorOrStaff,)
+
+    def get_title(self):
+        """Возвращает произведение по его ID или вызывает 404."""
+        return get_object_or_404(
+            Title,
+            pk=self.kwargs.get('title_id')
+        )
 
     def get_review(self):
         """Возвращает отзыв по его ID или вызывает 404."""
