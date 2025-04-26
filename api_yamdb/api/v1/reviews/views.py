@@ -4,9 +4,9 @@ from django.shortcuts import get_object_or_404
 from rest_framework import filters
 from django_filters.rest_framework import DjangoFilterBackend
 
-from api.v1.filters import TitleFilter
-from api.v1.permissions import IsAdminOrReadOnly, IsAuthorOrStaff
-from api.v1.serializers import (
+from .filters import TitleFilter
+from .permissions import IsAdminOrReadOnly, IsAuthorOrStaff
+from .serializers import (
     CategorySerializer,
     CommentSerializer,
     GenreSerializer,
@@ -14,7 +14,7 @@ from api.v1.serializers import (
     TitleReadSerializer,
     TitleCreateUpdateSerializer,
 )
-from api.v1.viewsets import ListCreateDestroyViewSet, ViewSetWithoutUpdate
+from .viewsets import ListCreateDestroyViewSet, ViewSetWithoutUpdate
 from reviews.models import Category, Genre, Review, Title
 
 

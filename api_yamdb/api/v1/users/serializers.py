@@ -2,7 +2,7 @@ from django.core.validators import RegexValidator
 
 from rest_framework import serializers
 
-from .models import User
+from users.models import User
 from api_yamdb.constants import (
     EMAIL_MAX_LENGTH,
     USERNAME_MAX_LENGTH

@@ -1,6 +1,6 @@
 from rest_framework import permissions
 
-from users.permissions import IsAdmin
+from api.v1.users.permissions import IsAdmin
 
 
 class IsAdminOrReadOnly(IsAdmin):

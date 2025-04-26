@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework import filters
 from rest_framework_simplejwt.tokens import AccessToken
 
-from .models import User
+from users.models import User
 
 from .serializers import (
     SignupSerializer,
