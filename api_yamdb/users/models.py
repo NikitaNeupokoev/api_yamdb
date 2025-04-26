@@ -51,7 +51,9 @@ class User(AbstractUser):
         super().clean()
 
         if self.username.lower() == 'me':
-            raise ValidationError({'username': 'Ошибка: "me" в username.'})
+            raise ValidationError(
+                {'username': 'Ошибка: "me" в username.'}
+            )
 
     @property
     def is_admin(self):

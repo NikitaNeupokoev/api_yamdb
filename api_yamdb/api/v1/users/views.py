@@ -1,6 +1,7 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from rest_framework import status, viewsets, mixins
+from .mixins import PatchModelMixin
 from rest_framework.decorators import (
     action,
     api_view,
@@ -10,7 +11,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
-from .models import User
+from users.models import User
 
 from .serializers import (
     SignupSerializer,
@@ -18,6 +19,7 @@ from .serializers import (
     UserSerializer
 )
 from .permissions import IsAdmin
+from api_yamdb.constants import EMAIL_ADRES
 
 
 @api_view(['POST'])
@@ -34,7 +36,10 @@ def signup(request):
         [user.email],
         fail_silently=False
     )
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(
+        serializer.data,
+        status=status.HTTP_200_OK
+    )
 
 
 @api_view(['POST'])

@@ -6,10 +6,14 @@ from .views import signup, get_token, UserViewSet
 app_name = 'users'
 
 router = DefaultRouter()
-router.register('users', UserViewSet, basename='users')
+router.register(
+    r'users',
+    UserViewSet,
+    basename='users'
+)
 
 urlpatterns = [
-    path('api/v1/auth/signup/', signup),
-    path('api/v1/auth/token/', get_token),
-    path('api/v1/', include(router.urls)),
+    path('auth/signup/', signup, name='signup'),
+    path('auth/token/', get_token, name='get_token'),
+    path('', include(router.urls)),
 ]
