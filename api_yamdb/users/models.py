@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from api_yamdb.constants import MAX_LENGTH_ROLE
@@ -31,16 +32,8 @@ class User(AbstractUser):
         default=USER,
         verbose_name='Роль'
     )
-
-    @property
-    def is_admin(self):
-        """Является ли пользователь администратором."""
-        return self.role == self.ADMIN or self.is_superuser
-
-    @property
-    def is_moderator(self):
-        """Является ли пользователь модератором."""
-        return self.role == self.MODERATOR
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username',]
 
     class Meta:
         ordering = ['username']
@@ -52,3 +45,20 @@ class User(AbstractUser):
         ]
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+
+    def clean(self):
+        """Дополнительная валидация пользователя."""
+        super().clean()
+
+        if self.username.lower() == 'me':
+            raise ValidationError({'username': 'Ошибка: "me" в username.'})
+
+    @property
+    def is_admin(self):
+        """Является ли пользователь администратором."""
+        return self.role == self.ADMIN or self.is_superuser
+
+    @property
+    def is_moderator(self):
+        """Является ли пользователь модератором."""
+        return self.role == self.MODERATOR
