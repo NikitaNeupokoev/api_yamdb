@@ -9,7 +9,10 @@ class ListCreateDestroyViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
-    """Базовый ViewSet для операций "list", "create" и "destroy"."""
+    """
+    ViewSet для операций создания, получения спискаю
+    и удаления объектов.
+    """
 
 
 class ViewSetWithoutUpdate(
@@ -21,7 +24,7 @@ class ViewSetWithoutUpdate(
     viewsets.GenericViewSet
 ):
     """
-    ViewSet для операций default "create()", "retrieve()", "partial_update()"
-    "destroy()" and "list()"
+    ViewSet для операций создания, получения.
+    частичного обновления, удаления и.
+    получения списка объектов.
     """
-

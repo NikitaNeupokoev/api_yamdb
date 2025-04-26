@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.relations import SlugRelatedField
@@ -76,14 +77,17 @@ class TitleCreateUpdateSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def validate_year(values):
-        """Метод для валидации значения year"""
+        """Метод для валидации значения year."""
         current_year = timezone.now().year
         if MIN_YEAR > values:
-            error_message = f'год выпуска не может быть меньше {MIN_YEAR}.'
+            error_message = (
+                f'год выпуска не может быть меньше {MIN_YEAR}.'
+            )
 
         elif values > current_year:
-            error_message = ('год выпуска не может '
-                             f'быть больше {current_year}.')
+            error_message = (
+                f'год выпуска не может быть больше {current_year}.'
+            )
 
         else:
             return values
@@ -114,7 +118,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         """
-        Проверка наличия существующего отзыва от пользователя.
+        Проверка наличия существующего.
+        отзыва от пользователя.
         """
         title = get_object_or_404(
             Title,
