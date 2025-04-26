@@ -8,10 +8,14 @@ def validate_year(values):
     """Валидации значения year."""
     current_year = timezone.now().year
     if MIN_YEAR > values:
-        error_message = f'год выпуска не может быть меньше {MIN_YEAR}.'
+        error_message = (
+            f'год выпуска не может быть меньше {MIN_YEAR}.'
+        )
 
     elif values > current_year:
-        error_message = (f'год выпуска не может быть больше {current_year}.')
+        error_message = (
+            f'год выпуска не может быть больше {current_year}.'
+        )
 
     else:
         return values
