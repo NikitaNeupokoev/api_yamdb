@@ -33,7 +33,7 @@ class User(AbstractUser):
         verbose_name='Роль'
     )
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username',]
+    REQUIRED_FIELDS = ['username']
 
     class Meta:
         ordering = ['username']
