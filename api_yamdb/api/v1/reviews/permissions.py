@@ -1,27 +1,21 @@
 from rest_framework import permissions
 
+from api.v1.users.permissions import IsAdmin
 
-class IsAdminOrReadOnly(permissions.BasePermission):
+
+class IsAdminOrReadOnly(IsAdmin):
     """Разрешение: только администратор или только чтение."""
 
     def has_permission(self, request, view):
         """Проверка прав доступа для запроса."""
         return (
             request.method in permissions.SAFE_METHODS
-            or request.user.is_authenticated
-            and request.user.is_admin
+            or super().has_permission(request, view)
         )
 
 
-class IsAuthorOrStaff(permissions.BasePermission):
+class IsAuthorOrStaff(permissions.IsAuthenticatedOrReadOnly):
     """Разрешение: автор или персонал."""
-
-    def has_permission(self, request, view):
-        """Проверка прав доступа для запроса."""
-        return (
-            request.method in permissions.SAFE_METHODS
-            or request.user.is_authenticated
-        )
 
     def has_object_permission(self, request, view, obj):
         """Проверка прав доступа к объекту."""

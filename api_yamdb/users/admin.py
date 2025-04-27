@@ -1,8 +1,20 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
 
-from .models import (
-    User,
-)
+from .models import User
 
-admin.site.register(User, UserAdmin)
+
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    """Административная панель для модели User."""
+
+    list_display = (
+        'pk',
+        'username',
+        'email',
+        'first_name',
+        'last_name',
+        'bio',
+        'role'
+    )
+    search_fields = ('username',)
+    empty_value_display = '-пусто-'

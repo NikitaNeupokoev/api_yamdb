@@ -4,7 +4,7 @@ from reviews.models import Title
 
 
 class TitleFilter(filters.FilterSet):
-    """Фильтр для произведения"""
+    """Фильтр для произведения."""
 
     genre = filters.CharFilter(
         field_name='genre__slug',
@@ -24,6 +24,5 @@ class TitleFilter(filters.FilterSet):
     )
 
     class Meta:
-
         fields = ('genre', 'name', 'category', 'year')
         model = Title

@@ -1,24 +1,21 @@
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets
-from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets
-from rest_framework.exceptions import ValidationError
 
-from reviews.models import Category, Genre, Review, Title
+from rest_framework import filters
+from django_filters.rest_framework import DjangoFilterBackend
 
-from api.filters import TitleFilter
-from api.permissions import IsAdminOrReadOnly, IsAuthorOrStaff
+from .filters import TitleFilter
+from .permissions import IsAdminOrReadOnly, IsAuthorOrStaff
 from .serializers import (
     CategorySerializer,
     CommentSerializer,
     GenreSerializer,
     ReviewSerializer,
     TitleReadSerializer,
-    TitleSerializer,
+    TitleCreateUpdateSerializer,
 )
-from .viewsets import ListCreateDestroyViewSet
+from .viewsets import ListCreateDestroyViewSet, ViewSetWithoutUpdate
+from reviews.models import Category, Genre, Review, Title
 
 
 class CategoryViewSet(ListCreateDestroyViewSet):
@@ -63,7 +60,7 @@ class GenreViewSet(ListCreateDestroyViewSet):
     permission_classes = (IsAdminOrReadOnly,)
 
 
-class TitleViewSet(viewsets.ModelViewSet):
+class TitleViewSet(ViewSetWithoutUpdate):
     """
     ViewSet для модели Title.
 
@@ -76,11 +73,10 @@ class TitleViewSet(viewsets.ModelViewSet):
         - create:
     """
 
-    queryset = Title.objects.all().order_by('name')
-    serializer_class = TitleSerializer
-    http_method_names = (
-        ['get', 'post', 'patch', 'delete', 'head', 'options']
-    )
+    queryset = Title.objects.all().annotate(
+        rating=Avg('reviews__score')
+    ).order_by('name')
+    serializer_class = TitleCreateUpdateSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -90,14 +86,14 @@ class TitleViewSet(viewsets.ModelViewSet):
         Возвращает класс сериализатора в зависимости от действия.
 
         Для операций retrieve и list используется TitleReadSerializer,
-        для остальных - TitleSerializer.
+        для остальных - TitleCreateUpdateSerializer.
         """
         if self.action in ('retrieve', 'list'):
             return TitleReadSerializer
-        return TitleSerializer
+        return TitleCreateUpdateSerializer
 
 
-class ReviewViewSet(viewsets.ModelViewSet):
+class ReviewViewSet(ViewSetWithoutUpdate):
     """
     ViewSet для модели Review.
 
@@ -114,9 +110,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = ReviewSerializer
-    http_method_names = (
-        ['get', 'post', 'patch', 'delete', 'head', 'options']
-    )
     permission_classes = (IsAuthorOrStaff,)
 
     def get_title(self):
@@ -131,23 +124,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
-        """
-        Создает новый отзыв, проверяя наличие существующего.
-        отзыва от пользователя.
-        """
-        title = self.get_title()
-        author = self.request.user
-        if (
-            self.request.method == 'POST'
-            and title.reviews.filter(author=author).exists()
-        ):
-            raise ValidationError(
-                {'review': 'Вы уже писали отзыв для данного произведения'}
-            )
-        serializer.save(author=author, title=title)
+        """Создает новый отзыв."""
+        serializer.save(author=self.request.user, title=self.get_title())
 
 
-class CommentViewSet(viewsets.ModelViewSet):
+class CommentViewSet(ViewSetWithoutUpdate):
     """
     ViewSet для модели Comment.
 
@@ -163,16 +144,14 @@ class CommentViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = CommentSerializer
-    http_method_names = (
-        ['get', 'post', 'patch', 'delete', 'head', 'options']
-    )
     permission_classes = (IsAuthorOrStaff,)
 
     def get_review(self):
         """Возвращает отзыв по его ID или вызывает 404."""
         return get_object_or_404(
             Review,
-            pk=self.kwargs.get('review_id')
+            pk=self.kwargs.get('review_id'),
+            title=self.kwargs.get('title_id')
         )
 
     def get_queryset(self):
