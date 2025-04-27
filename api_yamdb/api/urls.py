@@ -35,7 +35,7 @@ router_v1.register(
     basename='comment'
 )
 router_v1.register(
-    r'users',
+    'users',
     UserViewSet,
     basename='users'
 )

@@ -79,6 +79,7 @@ class UserViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
@@ -93,6 +94,11 @@ class UserViewSet(
     search_fields = ('username',)
     lookup_field = 'username'
 
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PUT':
+            return Response(status=405)
+        return super().update(request, *args, **kwargs)
+
     @action(detail=False, methods=['get', 'patch'], permission_classes=[IsAuthenticated])
     def me(self, request):
         user = request.user
@@ -106,5 +112,5 @@ class UserViewSet(
             serializer.save(role=user.role)
             return Response(serializer.data)
         serializer = UserSerializer(user)
-        return Response(serializer.data, status=200)
+        return Response(serializer.data)
 
