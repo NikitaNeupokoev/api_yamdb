@@ -1,23 +1,22 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+
 from rest_framework import status
 from rest_framework.decorators import (
     api_view,
     permission_classes
 )
-from rest_framework.permissions import (
-    AllowAny
-)
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
-
 from users.models import User
+
+from api_yamdb.constants import EMAIL_ADRES
 from .serializers import (
     SignupSerializer,
     TokenSerializer
 )
-from api_yamdb.constants import EMAIL_ADRES
 
 
 @api_view(['POST'])
@@ -42,7 +41,10 @@ def signup(request):
                 {"error": "Пользователь с таким email уже существует"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        user = User.objects.create(username=username, email=email)
+        user = User.objects.create(
+            username=username,
+            email=email
+        )
     confirmation_code = default_token_generator.make_token(user)
     send_mail(
         'Код подтверждения YaMDB',
@@ -64,4 +66,7 @@ def get_token(request):
     serializer.is_valid(raise_exception=True)
     user = serializer.validated_data['user']
     token = AccessToken.for_user(user)
-    return Response({'token': str(token)}, status=status.HTTP_200_OK)
+    return Response(
+        {'token': str(token)},
+        status=status.HTTP_200_OK
+    )
