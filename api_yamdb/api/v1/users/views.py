@@ -1,30 +1,22 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets, mixins 
+from rest_framework import status
 from rest_framework.decorators import (
-    action,
     api_view,
     permission_classes
 )
 from rest_framework.permissions import (
-    AllowAny,
-    IsAuthenticated
+    AllowAny
 )
 from rest_framework.response import Response
-from rest_framework import filters
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.exceptions import MethodNotAllowed
 
 
 from users.models import User
-
 from .serializers import (
     SignupSerializer,
-    TokenSerializer,
-    UserSerializer
+    TokenSerializer
 )
-from .permissions import IsAdmin
 from api_yamdb.constants import EMAIL_ADRES
 
 
@@ -73,44 +65,3 @@ def get_token(request):
     user = serializer.validated_data['user']
     token = AccessToken.for_user(user)
     return Response({'token': str(token)}, status=status.HTTP_200_OK)
-
-
-class UserViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
-):
-    """
-    ViewSet для управления пользователями (только для админов).
-    """
-
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [IsAdmin]
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('username',)
-    lookup_field = 'username'
-
-    def update(self, request, *args, **kwargs):
-        if request.method == 'PUT':
-            return Response(status=405)
-        return super().update(request, *args, **kwargs)
-
-    @action(detail=False, methods=['get', 'patch'], permission_classes=[IsAuthenticated])
-    def me(self, request):
-        user = request.user
-        if request.method == 'PATCH':
-            serializer = UserSerializer(
-                user,
-                data=request.data,
-                partial=True
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save(role=user.role)
-            return Response(serializer.data)
-        serializer = UserSerializer(user)
-        return Response(serializer.data)
-
