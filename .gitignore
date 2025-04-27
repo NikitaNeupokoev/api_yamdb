@@ -154,8 +154,6 @@ api_yamdb/reviews/management/
 # Коллекции
 postman_collection/
 
-# тесты
-tests/
 
 # шаблон
 .env.template
