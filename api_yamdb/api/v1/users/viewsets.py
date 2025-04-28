@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 from users.models import User
 
-from .permissions import IsAdmin
+from api.v1.permissions import IsAdmin
 from .serializers import UserSerializer
 
 

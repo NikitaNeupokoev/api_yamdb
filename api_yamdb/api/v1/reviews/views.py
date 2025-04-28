@@ -5,7 +5,7 @@ from rest_framework import filters
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .filters import TitleFilter
-from .permissions import IsAdminOrReadOnly, IsAuthorOrStaff
+from api.v1.permissions import IsAdminOrReadOnly, IsAuthorOrStaff
 from .serializers import (
     CategorySerializer,
     CommentSerializer,
