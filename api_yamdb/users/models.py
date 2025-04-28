@@ -32,6 +32,7 @@ class User(AbstractUser):
         default=USER,
         verbose_name='Роль'
     )
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
