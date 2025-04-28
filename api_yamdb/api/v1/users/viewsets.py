@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from users.models import User
 
 from api.v1.permissions import IsAdmin
+from api.v1.mixins import PatchModelMixin
 from .serializers import UserSerializer
 
 
@@ -15,8 +16,8 @@ class UserViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
+    PatchModelMixin,
     viewsets.GenericViewSet
 ):
     """
@@ -30,11 +31,6 @@ class UserViewSet(
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
     lookup_field = 'username'
-
-    def update(self, request, *args, **kwargs):
-        if request.method == 'PUT':
-            return Response(status=405)
-        return super().update(request, *args, **kwargs)
 
     @action(
         detail=False,
