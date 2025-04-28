@@ -1,3 +1,4 @@
+from rest_framework import serializers
 from rest_framework.response import Response
 from django.db.models import prefetch_related_objects
 
@@ -31,3 +32,15 @@ class PatchModelMixin:
 
     def perform_update(self, serializer):
         serializer.save()
+
+
+class UsernameValidatorMixin:
+    """Миксин для валидации username."""
+
+    def validate_username(self, value):
+        """Проверяет, что имя пользователя не 'me'."""
+        if value.lower() == 'me':
+            raise serializers.ValidationError(
+                'Имя "me" запрещено для использования.'
+            )
+        return value
