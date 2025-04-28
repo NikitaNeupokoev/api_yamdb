@@ -1,9 +1,13 @@
 from rest_framework.response import Response
-from rest_framework import status
+from django.db.models import prefetch_related_objects
 
 
 class PatchModelMixin:
-    """Обновить экземпляр модели с использованием PATCH."""
+    """
+    Обновление экземпляра модели с использованием PATCH.
+    Запрещает метод PUT.
+    Сохраняет функциональность prefetch_related.
+    """
 
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -15,20 +19,15 @@ class PatchModelMixin:
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
-        if getattr(
-                instance,
-                '_prefetched_objects_cache',
-                None
-        ):
+        queryset = self.get_queryset()
+        if queryset._prefetch_related_lookups:
             instance._prefetched_objects_cache = {}
+            prefetch_related_objects(
+                [instance],
+                *queryset._prefetch_related_lookups
+            )
 
         return Response(serializer.data)
 
     def perform_update(self, serializer):
         serializer.save()
-
-    def update(self, request, *args, **kwargs):
-        """Запрещаем PUT метод."""
-        return Response(
-            status=status.HTTP_405_METHOD_NOT_ALLOWED
-        )
