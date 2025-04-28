@@ -1,15 +1,15 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.validators import RegexValidator
-from django.shortcuts import get_object_or_404
-
 from rest_framework import serializers
-
-from users.models import User
+from django.shortcuts import get_object_or_404
 
 from api_yamdb.constants import (
     EMAIL_MAX_LENGTH,
     USERNAME_MAX_LENGTH
 )
+
+User = get_user_model()
 
 
 class SignupSerializer(serializers.Serializer):
