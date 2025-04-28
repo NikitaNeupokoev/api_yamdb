@@ -8,9 +8,8 @@ from rest_framework.decorators import (
 )
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import AccessToken
 
-from users.models import User
+from rest_framework_simplejwt.tokens import AccessToken
 
 from api_yamdb.constants import EMAIL_ADRES
 from .serializers import (
@@ -22,37 +21,20 @@ from .serializers import (
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def signup(request):
+    """Регистрация нового пользователя."""
     serializer = SignupSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    username = serializer.validated_data['username']
-    email = serializer.validated_data['email']
-    user_by_username = User.objects.filter(username=username).first()
-    user_by_email = User.objects.filter(email=email).first()
-    if user_by_username:
-        if user_by_username.email != email:
-            return Response(
-                {"error": "Пользователь с таким username уже существует"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        user = user_by_username
-    else:
-        if user_by_email:
-            return Response(
-                {"error": "Пользователь с таким email уже существует"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        user = User.objects.create(
-            username=username,
-            email=email
-        )
-    confirmation_code = default_token_generator.make_token(user)
+    confirmation_code = default_token_generator.make_token(
+        serializer.save()
+    )
     send_mail(
         'Код подтверждения YaMDB',
         f'Ваш код: {confirmation_code}',
         EMAIL_ADRES,
-        [user.email],
-        fail_silently=False
+        [serializer.validated_data['email']],
+        fail_silently=False,
     )
+
     return Response(
         serializer.data,
         status=status.HTTP_200_OK
@@ -62,11 +44,14 @@ def signup(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def get_token(request):
+    """Получение JWT токена для пользователя."""
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    user = serializer.validated_data['user']
-    token = AccessToken.for_user(user)
     return Response(
-        {'token': str(token)},
-        status=status.HTTP_200_OK
+        {'token': str(
+            AccessToken.for_user(
+                serializer.validated_data['user']
+            )
+        )},
+        status=status.HTTP_200_OK,
     )
