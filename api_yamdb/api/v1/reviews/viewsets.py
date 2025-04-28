@@ -1,5 +1,4 @@
 from rest_framework import mixins, viewsets
-
 from api.v1.mixins import PatchModelMixin
 
 
@@ -10,7 +9,7 @@ class ListCreateDestroyViewSet(
     viewsets.GenericViewSet
 ):
     """
-    ViewSet для операций создания, получения спискаю
+    ViewSet для операций создания, получения списка
     и удаления объектов.
     """
 
