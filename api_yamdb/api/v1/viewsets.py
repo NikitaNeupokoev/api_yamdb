@@ -1,5 +1,6 @@
 from rest_framework import mixins, viewsets
-from api.v1.mixins import PatchModelMixin
+
+from .mixins import PatchModelMixin
 
 
 class ListCreateDestroyViewSet(
