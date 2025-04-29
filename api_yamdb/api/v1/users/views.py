@@ -1,59 +1,58 @@
-from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 
-from rest_framework import status
+from rest_framework import (
+    mixins,
+    viewsets,
+    filters,
+    status
+)
 from rest_framework.decorators import (
     api_view,
     permission_classes,
     action
 )
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import (
+    AllowAny,
+    IsAuthenticated
+)
 from rest_framework.response import Response
-
 from rest_framework_simplejwt.tokens import AccessToken
 
+from users.models import User
+
 from api_yamdb.constants import EMAIL_ADRES
+from api.v1.mixins import PatchModelMixin
+from api.v1.permissions import IsAdmin
 from .serializers import (
     SignupSerializer,
-    TokenSerializer
+    TokenSerializer,
+    UserSerializer
 )
 
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def signup(request):
-    serializer = SignupSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    username = serializer.validated_data['username']
-    email = serializer.validated_data['email']
-    user_by_username = User.objects.filter(username=username).first()
-    user_by_email = User.objects.filter(email=email).first()
-    if user_by_username:
-        if user_by_username.email != email:
-            return Response(
-                {"error": "Пользователь с таким username уже существует"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        user = user_by_username
-    else:
-        if user_by_email:
-            return Response(
-                {"error": "Пользователь с таким email уже существует"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        user = User.objects.create(
-            username=username,
-            email=email
-        )
+def send_confirmation_email(user, email_address):
+    """Отправляет письмо с кодом подтверждения пользователю."""
     confirmation_code = default_token_generator.make_token(user)
     send_mail(
         'Код подтверждения YaMDB',
         f'Ваш код: {confirmation_code}',
         EMAIL_ADRES,
         [user.email],
-        fail_silently=False
+        fail_silently=False,
     )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def signup(request):
+    """Регистрация нового пользователя."""
+    serializer = SignupSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    user = serializer.save()
+
+    send_confirmation_email(user, EMAIL_ADRES)
+
     return Response(
         serializer.data,
         status=status.HTTP_200_OK
@@ -74,3 +73,46 @@ def get_token(request):
         )},
         status=status.HTTP_200_OK,
     )
+
+
+class UserViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    PatchModelMixin,
+    viewsets.GenericViewSet
+):
+    """
+    ViewSet для управления пользователями.
+    (только для админов).
+    """
+
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAdmin]
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+    lookup_field = 'username'
+
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[IsAuthenticated]
+    )
+    def me(self, request):
+        user = request.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+
+    @me.mapping.patch
+    def patch_me(self, request):
+        user = request.user
+        serializer = UserSerializer(
+            user,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(role=user.role)
+        return Response(serializer.data)
