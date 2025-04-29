@@ -55,15 +55,12 @@ class SignupSerializer(
 
     def save(self):
         """Создает или возвращает существующего пользователя."""
-        username = self.validated_data['username']
-        email = self.validated_data['email']
-
         user, created = User.objects.get_or_create(
-            username=username,
-            defaults={'email': email}
+            username=self.validated_data['username'],
+            defaults={'email': self.validated_data['email']},
         )
-        if not created and user.email != email:
-            user.email = email
+        if not created and user.email != self.validated_data['email']:
+            user.email = self.validated_data['email']
             user.save()
         return user
 
