@@ -1,14 +1,11 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.tokens import default_token_generator
 from django.core.validators import RegexValidator
-from rest_framework import serializers
 from django.shortcuts import get_object_or_404
+from rest_framework import serializers
 
-from api_yamdb.constants import (
-    EMAIL_MAX_LENGTH,
-    USERNAME_MAX_LENGTH
-)
 from api.v1.mixins import UsernameValidatorMixin
+from api_yamdb.constants import EMAIL_MAX_LENGTH, USERNAME_MAX_LENGTH
+from django.contrib.auth.tokens import default_token_generator
 
 User = get_user_model()
 
@@ -69,7 +66,7 @@ class SignupSerializer(
 
 
 class TokenSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=150)
+    username = serializers.CharField(max_length=USERNAME_MAX_LENGTH)
     confirmation_code = serializers.CharField()
 
     def validate(self, data):
