@@ -5,12 +5,12 @@ from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model
 
 from api_yamdb.constants import EMAIL_MAX_LENGTH, USERNAME_MAX_LENGTH
-from .validators import validate
+from api.v1.mixins import UsernameValidatorMixin
 
 User = get_user_model()
 
 
-class SignupSerializer(serializers.Serializer):
+class SignupSerializer(serializers.Serializer, UsernameValidatorMixin):
     """Сериализатор для регистрации нового пользователя."""
     email = serializers.EmailField(max_length=EMAIL_MAX_LENGTH)
     username = serializers.CharField(
@@ -28,8 +28,6 @@ class SignupSerializer(serializers.Serializer):
         """Проверяет существование пользователя по username и email."""
         username = data['username']
         email = data['email']
-
-        validate(username)
 
         user_by_username = User.objects.filter(username=username).first()
         user_by_email = User.objects.filter(email=email).first()
@@ -71,7 +69,7 @@ class TokenSerializer(serializers.Serializer):
         return data
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer, UsernameValidatorMixin):
     """Сериализатор для пользователей (для администраторов)."""
 
     class Meta:
@@ -84,10 +82,3 @@ class UserSerializer(serializers.ModelSerializer):
             'bio',
             'role'
         )
-
-    def validate_username(self, value):
-        if value.lower() == 'me':
-            raise serializers.ValidationError(
-                'Имя "me" запрещено для использования.'
-            )
-        return value
