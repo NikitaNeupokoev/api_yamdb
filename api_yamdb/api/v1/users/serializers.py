@@ -4,7 +4,10 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from api.v1.mixins import UsernameValidatorMixin
-from api_yamdb.constants import EMAIL_MAX_LENGTH, USERNAME_MAX_LENGTH
+from api_yamdb.constants import (
+    EMAIL_MAX_LENGTH,
+    USERNAME_MAX_LENGTH
+)
 from django.contrib.auth.tokens import default_token_generator
 
 User = get_user_model()
