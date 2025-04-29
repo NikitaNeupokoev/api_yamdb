@@ -31,22 +31,27 @@ from .serializers import (
 )
 
 
+def send_confirmation_email(user, email_address):
+    """Отправляет письмо с кодом подтверждения пользователю."""
+    confirmation_code = default_token_generator.make_token(user)
+    send_mail(
+        'Код подтверждения YaMDB',
+        f'Ваш код: {confirmation_code}',
+        EMAIL_ADRES,
+        [user.email],
+        fail_silently=False,
+    )
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def signup(request):
     """Регистрация нового пользователя."""
     serializer = SignupSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    confirmation_code = default_token_generator.make_token(
-        serializer.save()
-    )
-    send_mail(
-        'Код подтверждения YaMDB',
-        f'Ваш код: {confirmation_code}',
-        EMAIL_ADRES,
-        [serializer.validated_data['email']],
-        fail_silently=False,
-    )
+    user = serializer.save()
+
+    send_confirmation_email(user, EMAIL_ADRES)
 
     return Response(
         serializer.data,
