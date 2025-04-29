@@ -14,7 +14,10 @@ from .serializers import (
     TitleReadSerializer,
     TitleCreateUpdateSerializer,
 )
-from .viewsets import ListCreateDestroyViewSet, ViewSetWithoutUpdate
+from api.v1.viewsets import (
+    ListCreateDestroyViewSet,
+    ViewSetWithoutUpdate
+)
 from reviews.models import Category, Genre, Review, Title
 
 
