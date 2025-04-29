@@ -32,19 +32,22 @@ class UserViewSet(
 
     @action(
         detail=False,
-        methods=['get', 'patch'],
+        methods=['get'],
         permission_classes=[IsAuthenticated]
     )
     def me(self, request):
         user = request.user
-        if request.method == 'PATCH':
-            serializer = UserSerializer(
-                user,
-                data=request.data,
-                partial=True
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save(role=user.role)
-            return Response(serializer.data)
         serializer = UserSerializer(user)
+        return Response(serializer.data)
+
+    @me.mapping.patch
+    def patch_me(self, request):
+        user = request.user
+        serializer = UserSerializer(
+            user,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(role=user.role)
         return Response(serializer.data)
