@@ -39,28 +39,38 @@ class SignupSerializer(
         username = data['username']
         email = data['email']
 
-        user_by_username = User.objects.filter(username=username).first()
-        user_by_email = User.objects.filter(email=email).first()
+        user_by_username = User.objects.filter(
+            username=username
+        ).first()
+        user_by_email = User.objects.filter(
+            email=email
+        ).first()
 
         if user_by_username and user_by_username.email != email:
             raise serializers.ValidationError(
-                "Пользователь с таким username уже существует"
+                'Пользователь с таким username уже существует'
             )
         if user_by_email and user_by_email.username != username:
             raise serializers.ValidationError(
-                "Пользователь с таким email уже существует"
+                'Пользователь с таким email уже существует'
             )
 
         return data
 
     def create(self, validated_data):
         """Создает или возвращает существующего пользователя."""
-        user, _ = User.objects.get_or_create(**validated_data)
+        user, _ = User.objects.get_or_create(
+            **validated_data
+        )
         return user
 
 
 class TokenSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=USERNAME_MAX_LENGTH)
+    """Сериализатор для получения JWT-токена."""
+
+    username = serializers.CharField(
+        max_length=USERNAME_MAX_LENGTH
+    )
     confirmation_code = serializers.CharField()
 
     def validate(self, data):
